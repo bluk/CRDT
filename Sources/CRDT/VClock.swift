@@ -64,20 +64,50 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
     }
 
     public static func < (lhs: Self, rhs: Self) -> Bool {
-        return lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
-            let rhsClockValue = rhs[processClock.actor]
-            return processClock.clock < rhsClockValue
+        guard lhs.clockZeroValue <= rhs.clockZeroValue else {
+            return false
         }
-            && ((lhs.clockZeroValue < rhs.clockZeroValue) ||
-                ((lhs.clockZeroValue == rhs.clockZeroValue) && !rhs.allClocksAtZeroValue))
+
+        guard !lhs.nonzeroClockValues.isEmpty else {
+            return !rhs.nonzeroClockValues.isEmpty
+        }
+
+        let valuesCanBeLessThanOrEqual = (lhs.clockZeroValue < rhs.clockZeroValue) || (lhs.nonzeroClockValues.count < rhs.nonzeroClockValues.count)
+
+        if valuesCanBeLessThanOrEqual {
+            let isLessThanOrEqual = lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
+                let rhsClockValue = rhs[processClock.actor]
+                return processClock.clock <= rhsClockValue
+            }
+
+            if isLessThanOrEqual {
+                return true
+            }
+        } else {
+            let isStrictlyLessThan = lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
+                let rhsClockValue = rhs[processClock.actor]
+                return processClock.clock < rhsClockValue
+            }
+
+            if isStrictlyLessThan {
+                return true
+            }
+        }
+
+        return false
     }
 
     public static func <= (lhs: Self, rhs: Self) -> Bool {
-        return lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
+        guard lhs.clockZeroValue <= rhs.clockZeroValue else {
+            return false
+        }
+
+        let isLessThanOrEqual = lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
             let rhsClockValue = rhs[processClock.actor]
             return processClock.clock <= rhsClockValue
         }
-            && (lhs.clockZeroValue <= rhs.clockZeroValue)
+
+        return isLessThanOrEqual
     }
 
     /// Forms the greatest lower bound value given this instance's clocks and the other instance's clocks.

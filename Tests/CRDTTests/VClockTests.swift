@@ -100,10 +100,18 @@ public final class VClockTests: XCTestCase {
         XCTAssertTrue(vClock2 < vClock1)
 
         vClock2.apply(incrementProcessAOperation1)
-        XCTAssertEqual(vClock2[processA], 1)
+        XCTAssertEqual(vClock1[processA], 1)
         XCTAssertEqual(vClock2[processA], 1)
         XCTAssertFalse(vClock1 < vClock2)
         XCTAssertFalse(vClock2 < vClock1)
+
+        vClock1.incrementClock(for: processB)
+        XCTAssertEqual(vClock1[processA], 1)
+        XCTAssertEqual(vClock1[processB], 1)
+        XCTAssertEqual(vClock2[processA], 1)
+        XCTAssertEqual(vClock2[processB], 0)
+        XCTAssertFalse(vClock1 < vClock2)
+        XCTAssertTrue(vClock2 < vClock1)
     }
 
     func testLessThanEqual() {
@@ -121,9 +129,17 @@ public final class VClockTests: XCTestCase {
         XCTAssertTrue(vClock2 <= vClock1)
 
         vClock2.apply(incrementProcessAOperation1)
-        XCTAssertEqual(vClock2[processA], 1)
+        XCTAssertEqual(vClock1[processA], 1)
         XCTAssertEqual(vClock2[processA], 1)
         XCTAssertTrue(vClock1 <= vClock2)
+        XCTAssertTrue(vClock2 <= vClock1)
+
+        vClock1.incrementClock(for: processB)
+        XCTAssertEqual(vClock1[processA], 1)
+        XCTAssertEqual(vClock1[processB], 1)
+        XCTAssertEqual(vClock2[processA], 1)
+        XCTAssertEqual(vClock2[processB], 0)
+        XCTAssertFalse(vClock1 <= vClock2)
         XCTAssertTrue(vClock2 <= vClock1)
     }
 
