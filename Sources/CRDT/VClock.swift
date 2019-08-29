@@ -12,15 +12,16 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-/// A vector clock which stores clocks for processes. Each process participating in a system has its own clock.
-/// When an event occurs in a process, the process should increment its own clock.
-public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
-    public struct ProcessClock {
-        public let process: Process
+/// A vector clock which stores clocks for actors in a system. Each actor participating in a system has its own clock.
+/// An actor could represent a process, a device, a person, or other entity. When an event occurs in an actor, the
+/// actor should increment its own clock.
+public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
+    public struct ActorClock {
+        public let actor: Actor
         public let clock: Clock
 
-        public init(process: Process, clock: Clock) {
-            self.process = process
+        public init(actor: Actor, clock: Clock) {
+            self.actor = actor
             self.clock = clock
         }
     }
@@ -29,23 +30,23 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
         case conflictingClockZeroValue
     }
 
-    public typealias CRDTOperation = ProcessClock
+    public typealias CRDTOperation = ActorClock
 
     /// The vector clock's value
-    public private(set) var nonzeroClockValues: [ProcessClock]
+    public private(set) var nonzeroClockValues: [ActorClock]
     public private(set) var clockZeroValue: Clock
 
-    /// - Parameter clockZeroValue: The clock's zero value. The zero value is the initial value of a clock in a
-    ///                             process where no event has occurred.
+    /// - Parameter clockZeroValue: The clock's zero value. The zero value is the initial value of a clock in an
+    ///                             actor where no event has occurred.
     public init(clockZeroValue: Clock) {
         self.clockZeroValue = clockZeroValue
         self.nonzeroClockValues = []
     }
 
-    /// - Parameter process: The process
-    /// - Returns: The process's clock value
-    public subscript(index: Process) -> Clock {
-        return self.nonzeroClockValues.first(where: { $0.process == index })?.clock
+    /// - Parameter index: The actor
+    /// - Returns: The actor's clock value
+    public subscript(index: Actor) -> Clock {
+        return self.nonzeroClockValues.first(where: { $0.actor == index })?.clock
             ?? self.clockZeroValue
     }
 
@@ -58,13 +59,13 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     ///
     /// - Returns: true if this instance and the other instance do not indicate a less than or equal orderable
     ///            relationship between the respective clock values.
-    public func isConcurrentTo(_ other: VClock<Process, Clock>) -> Bool {
+    public func isConcurrentTo(_ other: VClock<Actor, Clock>) -> Bool {
         return !(self <= other) && !(other <= self)
     }
 
     public static func < (lhs: Self, rhs: Self) -> Bool {
         return lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
-            let rhsClockValue = rhs[processClock.process]
+            let rhsClockValue = rhs[processClock.actor]
             return processClock.clock < rhsClockValue
         }
             && ((lhs.clockZeroValue < rhs.clockZeroValue) ||
@@ -73,7 +74,7 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
 
     public static func <= (lhs: Self, rhs: Self) -> Bool {
         return lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
-            let rhsClockValue = rhs[processClock.process]
+            let rhsClockValue = rhs[processClock.actor]
             return processClock.clock <= rhsClockValue
         }
             && (lhs.clockZeroValue <= rhs.clockZeroValue)
@@ -82,20 +83,20 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     /// Forms the greatest lower bound value given this instance's clocks and the other instance's clocks.
     ///
     /// - Parameter other: The other instance
-    public mutating func formGreatestLowerBound(_ other: VClock<Process, Clock>) {
+    public mutating func formGreatestLowerBound(_ other: VClock<Actor, Clock>) {
         if self.clockZeroValue <= other.clockZeroValue {
             for (index, processClock) in self.nonzeroClockValues.enumerated() {
-                let otherClockValue = other[processClock.process]
+                let otherClockValue = other[processClock.actor]
                 if otherClockValue < processClock.clock {
-                    self.nonzeroClockValues[index] = ProcessClock(process: processClock.process, clock: otherClockValue)
+                    self.nonzeroClockValues[index] = ActorClock(actor: processClock.actor, clock: otherClockValue)
                 }
             }
         } else if other.clockZeroValue < self.clockZeroValue {
-            var nonzeroClockValuesCopy: [ProcessClock] = other.nonzeroClockValues
+            var nonzeroClockValuesCopy: [ActorClock] = other.nonzeroClockValues
             for (index, processClock) in nonzeroClockValuesCopy.enumerated() {
-                let selfClockValue = self[processClock.process]
+                let selfClockValue = self[processClock.actor]
                 if selfClockValue < processClock.clock {
-                    nonzeroClockValuesCopy[index] = ProcessClock(process: processClock.process, clock: selfClockValue)
+                    nonzeroClockValuesCopy[index] = ActorClock(actor: processClock.actor, clock: selfClockValue)
                 }
             }
 
@@ -112,7 +113,7 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     ///
     /// - Parameter other: The other instance
     /// - Returns: A value which is the greatest lower bound of this instance's clocks and the other instance's clocks.
-    public func greatestLowerBound(_ other: VClock<Process, Clock>) -> Self {
+    public func greatestLowerBound(_ other: VClock<Actor, Clock>) -> Self {
         var copy = self
         copy.formGreatestLowerBound(other)
         return copy
@@ -121,11 +122,11 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     /// Removes clock data from this instance's for values where the other clock's data is ahead.
     ///
     /// - Parameter other: The other instance
-    public mutating func forget(_ other: VClock<Process, Clock>) {
+    public mutating func forget(_ other: VClock<Actor, Clock>) {
         for processClock in other.nonzeroClockValues {
-            let value = self[processClock.process]
+            let value = self[processClock.actor]
             if value < processClock.clock {
-                self.nonzeroClockValues.removeAll(where: { $0.process == processClock.process })
+                self.nonzeroClockValues.removeAll(where: { $0.actor == processClock.actor })
             }
         }
         self.checkInvariants()
@@ -135,15 +136,15 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     ///
     /// - Throws: Throws an error if this instance's clock zero value and the other instance's clock zero
     ///           value are not equal.
-    public mutating func formIntersection(_ other: VClock<Process, Clock>) throws {
+    public mutating func formIntersection(_ other: VClock<Actor, Clock>) throws {
         if self.clockZeroValue != other.clockZeroValue {
             throw Error.conflictingClockZeroValue
         }
 
-        var processClockValues: [ProcessClock] = []
+        var processClockValues: [ActorClock] = []
         processClockValues.reserveCapacity(self.nonzeroClockValues.count)
         for processClock in self.nonzeroClockValues {
-            let otherValue = other[processClock.process]
+            let otherValue = other[processClock.actor]
             if processClock.clock == otherValue {
                 processClockValues.append(processClock)
             }
@@ -157,7 +158,7 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
     /// - Throws: Throws an error if this instance's clock zero value and the other instance's clock zero value
     ///           are not equal.
     /// - Returns: The intersection of the clock values between this instance and the other instance.
-    public func intersection(_ other: VClock<Process, Clock>) throws -> Self {
+    public func intersection(_ other: VClock<Actor, Clock>) throws -> Self {
         var copy = self
         try copy.formIntersection(other)
         return copy
@@ -165,12 +166,12 @@ public struct VClock<Process: Equatable, Clock: Comparable>: PartialOrderable {
 
     private func checkInvariants() {
         assert({
-            let processes = self.nonzeroClockValues.map { $0.process }
-            let reducedProcesses = processes.reduce([]) { partialResult, process -> [Process] in
-                if partialResult.contains(process) {
+            let processes = self.nonzeroClockValues.map { $0.actor }
+            let reducedProcesses = processes.reduce([]) { partialResult, actor -> [Actor] in
+                if partialResult.contains(actor) {
                     return partialResult
                 }
-                return partialResult + [process]
+                return partialResult + [actor]
             }
             if processes.count != reducedProcesses.count {
                 return false
@@ -193,46 +194,46 @@ public extension VClock where Clock: BinaryInteger {
         self.init(clockZeroValue: 0)
     }
 
-    /// Makes an operation which increments a clock for a process.
+    /// Makes an operation which increments a clock for an actor.
     ///
-    /// - Parameter process: The process which clock to increment
-    /// - Returns: An operation which increments a clock for a process.
-    func makeIncrementClockOperation(for process: Process) -> ProcessClock {
-        let next = self[process] + 1
-        return ProcessClock(process: process, clock: next)
+    /// - Parameter actor: The actor whose clock to increment
+    /// - Returns: An operation which increments a clock for an actor.
+    func makeIncrementClockOperation(for actor: Actor) -> ActorClock {
+        let next = self[actor] + 1
+        return ActorClock(actor: actor, clock: next)
     }
 
-    /// Makes an operation which increments a clock for a process and applies
+    /// Makes an operation which increments a clock for an actor and applies
     /// the operation to increment the value.
     ///
-    /// - Parameter process: The process which clock to increment
-    /// - Returns: An operation which increments a clock for a process.
+    /// - Parameter actor: The actor whose clock to increment
+    /// - Returns: An operation which increments a clock for an actor.
     @discardableResult
-    mutating func incrementClock(for process: Process) -> ProcessClock {
-        let processClock = self.makeIncrementClockOperation(for: process)
-        self.apply(processClock)
-        return processClock
+    mutating func incrementClock(for actor: Actor) -> ActorClock {
+        let actorClock = self.makeIncrementClockOperation(for: actor)
+        self.apply(actorClock)
+        return actorClock
     }
 }
 
-extension VClock: Equatable where Process: Equatable, Clock: Equatable {}
+extension VClock: Equatable where Actor: Equatable, Clock: Equatable {}
 
-extension VClock: Hashable where Process: Hashable, Clock: Hashable {}
+extension VClock: Hashable where Actor: Hashable, Clock: Hashable {}
 
-extension VClock: Codable where Process: Codable, Clock: Codable {}
+extension VClock: Codable where Actor: Codable, Clock: Codable {}
 
-extension VClock.ProcessClock: Equatable where Process: Equatable, Clock: Equatable {}
+extension VClock.ActorClock: Equatable where Actor: Equatable, Clock: Equatable {}
 
-extension VClock.ProcessClock: Hashable where Process: Hashable, Clock: Hashable {}
+extension VClock.ActorClock: Hashable where Actor: Hashable, Clock: Hashable {}
 
-extension VClock.ProcessClock: Codable where Process: Codable, Clock: Codable {}
+extension VClock.ActorClock: Codable where Actor: Codable, Clock: Codable {}
 
 extension VClock: CmRDT {
-    public mutating func apply(_ operation: VClock.ProcessClock) {
+    public mutating func apply(_ operation: VClock.ActorClock) {
         guard self.clockZeroValue < operation.clock else {
             return
         }
-        guard let processIndex = self.nonzeroClockValues.firstIndex(where: { $0.process == operation.process }) else {
+        guard let processIndex = self.nonzeroClockValues.firstIndex(where: { $0.actor == operation.actor }) else {
             self.nonzeroClockValues.append(operation)
             return
         }
@@ -245,7 +246,7 @@ extension VClock: CmRDT {
 }
 
 extension VClock: CvRDT {
-    public mutating func merge(_ other: VClock<Process, Clock>) throws {
+    public mutating func merge(_ other: VClock<Actor, Clock>) throws {
         if self.clockZeroValue != other.clockZeroValue {
             throw Error.conflictingClockZeroValue
         }

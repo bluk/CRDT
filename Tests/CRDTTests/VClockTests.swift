@@ -79,7 +79,7 @@ public final class VClockTests: XCTestCase {
         XCTAssertEqual(vClock1[processA], zeroValue)
         XCTAssertTrue(vClock1.allClocksAtZeroValue)
 
-        let processAClock0 = VClock<String, Int>.ProcessClock(process: processA, clock: 0)
+        let processAClock0 = VClock<String, Int>.ActorClock(actor: processA, clock: 0)
         vClock1.apply(processAClock0)
         XCTAssertEqual(vClock1[processA], zeroValue)
         XCTAssertTrue(vClock1.allClocksAtZeroValue)
