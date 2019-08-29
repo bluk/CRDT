@@ -1,0 +1,13 @@
+name: macOS CI
+
+on: [push]
+
+jobs:
+  build_and_test:
+    name: Build and Test Package
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Swift Build and Test
+        run: swift test
