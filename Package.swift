@@ -22,5 +22,13 @@ let package = Package(
             name: "CRDTTests",
             dependencies: ["CRDT"]
         ),
+        .target(
+            name: "CRDTCounters",
+            dependencies: ["CRDT"]
+        ),
+        .testTarget(
+            name: "CRDTCountersTests",
+            dependencies: ["CRDTCounters"]
+        ),
     ]
 )
