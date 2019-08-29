@@ -45,11 +45,11 @@ public struct GCounter<Actor: Equatable>: PartialOrderable {
         return operation
     }
 
-    public static func < (lhs: Self, rhs: Self) -> Bool {
+    public static func < (lhs: GCounter<Actor>, rhs: GCounter<Actor>) -> Bool {
         return lhs.actorCounters < rhs.actorCounters
     }
 
-    public static func <= (lhs: Self, rhs: Self) -> Bool {
+    public static func <= (lhs: GCounter<Actor>, rhs: GCounter<Actor>) -> Bool {
         return lhs.actorCounters <= rhs.actorCounters
     }
 }
@@ -77,7 +77,7 @@ extension GCounter: CvRDT {
         try self.actorCounters.merge(other.actorCounters)
     }
 
-    public func merged(_ other: Self) throws -> Self {
+    public func merged(_ other: GCounter<Actor>) throws -> GCounter<Actor> {
         var copy = self
         try copy.merge(other)
         return copy

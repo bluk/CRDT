@@ -63,7 +63,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
         return !(self <= other) && !(other <= self)
     }
 
-    public static func < (lhs: Self, rhs: Self) -> Bool {
+    public static func < (lhs: VClock<Actor, Clock>, rhs: VClock<Actor, Clock>) -> Bool {
         guard lhs.clockZeroValue <= rhs.clockZeroValue else {
             return false
         }
@@ -97,7 +97,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
         return false
     }
 
-    public static func <= (lhs: Self, rhs: Self) -> Bool {
+    public static func <= (lhs: VClock<Actor, Clock>, rhs: VClock<Actor, Clock>) -> Bool {
         guard lhs.clockZeroValue <= rhs.clockZeroValue else {
             return false
         }
@@ -143,7 +143,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
     ///
     /// - Parameter other: The other instance
     /// - Returns: A value which is the greatest lower bound of this instance's clocks and the other instance's clocks.
-    public func greatestLowerBound(_ other: VClock<Actor, Clock>) -> Self {
+    public func greatestLowerBound(_ other: VClock<Actor, Clock>) -> VClock<Actor, Clock> {
         var copy = self
         copy.formGreatestLowerBound(other)
         return copy
@@ -188,7 +188,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
     /// - Throws: Throws an error if this instance's clock zero value and the other instance's clock zero value
     ///           are not equal.
     /// - Returns: The intersection of the clock values between this instance and the other instance.
-    public func intersection(_ other: VClock<Actor, Clock>) throws -> Self {
+    public func intersection(_ other: VClock<Actor, Clock>) throws -> VClock<Actor, Clock> {
         var copy = self
         try copy.formIntersection(other)
         return copy
@@ -286,7 +286,7 @@ extension VClock: CvRDT {
         }
     }
 
-    public func merged(_ other: Self) throws -> Self {
+    public func merged(_ other: VClock<Actor, Clock>) throws -> VClock<Actor, Clock> {
         var copy = self
         try copy.merge(other)
         return copy

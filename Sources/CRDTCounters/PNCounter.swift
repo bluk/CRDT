@@ -119,7 +119,7 @@ extension PNCounter: CvRDT {
         try self.negativeValues.merge(other.negativeValues)
     }
 
-    public func merged(_ other: Self) throws -> Self {
+    public func merged(_ other: PNCounter<Actor>) throws -> PNCounter<Actor> {
         var copy = self
         try copy.merge(other)
         return copy
