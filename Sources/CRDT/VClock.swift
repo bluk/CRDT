@@ -16,16 +16,6 @@
 /// An actor could represent a process, a device, a person, or other entity. When an event occurs in an actor, the
 /// actor should increment its own clock.
 public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
-    public struct ActorClock {
-        public let actor: Actor
-        public let clock: Clock
-
-        public init(actor: Actor, clock: Clock) {
-            self.actor = actor
-            self.clock = clock
-        }
-    }
-
     public enum Error: Swift.Error {
         case conflictingClockZeroValue
     }
@@ -33,7 +23,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
     public typealias CRDTOperation = ActorClock
 
     /// The vector clock's value
-    public private(set) var nonzeroClockValues: [ActorClock]
+    public private(set) var nonzeroClockValues: [ActorClock<Actor, Clock>]
     public private(set) var clockZeroValue: Clock
 
     /// - Parameter clockZeroValue: The clock's zero value. The zero value is the initial value of a clock in an
@@ -72,7 +62,8 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
             return !rhs.nonzeroClockValues.isEmpty
         }
 
-        let valuesCanBeLessThanOrEqual = (lhs.clockZeroValue < rhs.clockZeroValue) || (lhs.nonzeroClockValues.count < rhs.nonzeroClockValues.count)
+        let valuesCanBeLessThanOrEqual = (lhs.clockZeroValue < rhs.clockZeroValue)
+            || (lhs.nonzeroClockValues.count < rhs.nonzeroClockValues.count)
 
         if valuesCanBeLessThanOrEqual {
             let isLessThanOrEqual = lhs.nonzeroClockValues.allSatisfy { processClock -> Bool in
@@ -171,7 +162,7 @@ public struct VClock<Actor: Equatable, Clock: Comparable>: PartialOrderable {
             throw Error.conflictingClockZeroValue
         }
 
-        var processClockValues: [ActorClock] = []
+        var processClockValues: [ActorClock<Actor, Clock>] = []
         processClockValues.reserveCapacity(self.nonzeroClockValues.count)
         for processClock in self.nonzeroClockValues {
             let otherValue = other[processClock.actor]
@@ -228,7 +219,7 @@ public extension VClock where Clock: BinaryInteger {
     ///
     /// - Parameter actor: The actor whose clock to increment
     /// - Returns: An operation which increments a clock for an actor.
-    func makeIncrementClockOperation(for actor: Actor) -> ActorClock {
+    func makeIncrementClockOperation(for actor: Actor) -> ActorClock<Actor, Clock> {
         let next = self[actor] + 1
         return ActorClock(actor: actor, clock: next)
     }
@@ -239,7 +230,7 @@ public extension VClock where Clock: BinaryInteger {
     /// - Parameter actor: The actor whose clock to increment
     /// - Returns: An operation which increments a clock for an actor.
     @discardableResult
-    mutating func incrementClock(for actor: Actor) -> ActorClock {
+    mutating func incrementClock(for actor: Actor) -> ActorClock<Actor, Clock> {
         let actorClock = self.makeIncrementClockOperation(for: actor)
         self.apply(actorClock)
         return actorClock
@@ -252,14 +243,8 @@ extension VClock: Hashable where Actor: Hashable, Clock: Hashable {}
 
 extension VClock: Codable where Actor: Codable, Clock: Codable {}
 
-extension VClock.ActorClock: Equatable where Actor: Equatable, Clock: Equatable {}
-
-extension VClock.ActorClock: Hashable where Actor: Hashable, Clock: Hashable {}
-
-extension VClock.ActorClock: Codable where Actor: Codable, Clock: Codable {}
-
 extension VClock: CmRDT {
-    public mutating func apply(_ operation: VClock.ActorClock) {
+    public mutating func apply(_ operation: ActorClock<Actor, Clock>) {
         guard self.clockZeroValue < operation.clock else {
             return
         }

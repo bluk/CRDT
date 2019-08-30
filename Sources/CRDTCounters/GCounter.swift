@@ -17,7 +17,7 @@ import CRDT
 /// A grow-only counter. Increasing values from each actor can be generated and applied.
 public struct GCounter<Actor: Equatable>: PartialOrderable {
     public struct CRDTOperation {
-        public let value: VClock<Actor, Value>.ActorClock
+        public let value: ActorClock<Actor, Value>
     }
 
     public typealias Value = UInt64
