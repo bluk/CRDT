@@ -30,5 +30,13 @@ let package = Package(
             name: "CRDTCountersTests",
             dependencies: ["CRDTCounters"]
         ),
+        .target(
+            name: "CRDTSets",
+            dependencies: ["CRDT"]
+        ),
+        .testTarget(
+            name: "CRDTSetsTests",
+            dependencies: ["CRDTSets"]
+        ),
     ]
 )
