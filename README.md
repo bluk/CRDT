@@ -2,6 +2,10 @@
 
 A [Swift][swift] package to help build [Convergent and Commutative Replicated Data Types][crdt].
 
+CRDTs are useful for synchronizing data which eventually converges to a consistent state. CRDTs can be
+useful when nodes/replicas may not be able to directly communicate with each other. CRDTs can be used
+instead of an always active foreground synchronization protocol.
+
 ## Usage
 
 ### Swift Package Manager
@@ -27,6 +31,40 @@ let package = Package(
     ]
 )
 ```
+
+### Code
+
+```swift
+import Foundation
+
+import CRDT
+
+// First system
+let actorA = UUID()
+var a = GCounter<UUID>()
+
+a.incrementCounter(for: actorA)
+// a.value == 1
+
+// Second system
+let actorB = UUID()
+var b = GCounter<UUID>()
+
+b.incrementCounter(for: actorB)
+// b.value == 1
+
+try b.merge(a)
+// b.value == 2
+
+a.incrementCounter(for: actorA)
+a.incrementCounter(for: actorA)
+// a.value == 3
+
+try b.merge(a)
+// b.value == 4
+```
+
+See the tests for more examples.
 
 ## Related Links
 
