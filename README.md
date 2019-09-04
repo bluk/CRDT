@@ -28,6 +28,13 @@ let package = Package(
 )
 ```
 
+## Related Links
+
+See other projects which have implementations for CRDTs:
+
+* [rust-crdt][rust_crdt]
+* [java-crdt][java_crdt]
+
 ## License
 
 [Apache-2.0 License][license]
@@ -35,3 +42,5 @@ let package = Package(
 [license]: LICENSE
 [swift]: https://swift.org
 [crdt]: https://hal.inria.fr/file/index/docid/555588/filename/techreport.pdf
+[rust_crdt]: https://github.com/rust-crdt/rust-crdt
+[java_crdt]: https://github.com/ajantis/java-crdt
