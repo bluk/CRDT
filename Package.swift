@@ -46,5 +46,13 @@ let package = Package(
             name: "CRDTRegistersTests",
             dependencies: ["CRDTRegisters"]
         ),
+        .target(
+            name: "LSEQ",
+            dependencies: []
+        ),
+        .testTarget(
+            name: "LSEQTests",
+            dependencies: ["LSEQ"]
+        ),
     ]
 )

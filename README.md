@@ -68,6 +68,13 @@ See the tests for more examples.
 
 ## Related Links
 
+### CRDT Papers
+
+* [Convergent and Commutative Replicated Data Types][crdt]
+* [LSEQ, an Adaptive Structure for Sequences in Distributed Collaborative Editing][lseq]
+
+### Other Projects
+
 See other projects which have implementations for CRDTs:
 
 * [rust-crdt][rust_crdt]
@@ -82,3 +89,4 @@ See other projects which have implementations for CRDTs:
 [crdt]: https://hal.inria.fr/file/index/docid/555588/filename/techreport.pdf
 [rust_crdt]: https://github.com/rust-crdt/rust-crdt
 [java_crdt]: https://github.com/ajantis/java-crdt
+[lseq]: https://hal.archives-ouvertes.fr/hal-00921633/document
