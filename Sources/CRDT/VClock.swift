@@ -271,6 +271,13 @@ extension VClock: CvRDT {
         }
     }
 
+    /// An idempotent and commutative function which attempts to produce a new instance with the
+    /// other instance's state merged with this instance's state.
+    ///
+    /// - Parameter other: The other instance
+    /// - Throws: Throws an error if the states could not be merged.
+    /// - Returns: A new instance which is the result of merging this instance's state with the
+    ///            other instance's state.
     public func merged(_ other: VClock<Actor, Clock>) throws -> VClock<Actor, Clock> {
         var copy = self
         try copy.merge(other)
